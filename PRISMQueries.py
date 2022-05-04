@@ -121,8 +121,6 @@ def importFuelPricePrism(self):
             columns={'Date' : 'DATE', 'VALUE' : self.fuelPoint})
 
 
-
-
 def importFuelTransportPrism(self):
 
     queryStr =  """SELECT T.*
@@ -137,11 +135,15 @@ def importFuelTransportPrism(self):
         and T.[FUTURE_MONTH] = TM.[FUTURE_MONTH]
         and T.[MONTHYEAR] = TM.[MONTHYEAR]
         and T.[EFFECTIVE_DATE] = TM.MaxDate
-        WHERE T.FUTURE_MONTH >= DATEADD(YEAR, DATEDIFF(YEAR, 0, '""" + self.sQLStartDate + """'), 0)
-        AND T.FUTURE_MONTH <= DATEADD(YEAR, DATEDIFF(YEAR, 0, '""" + self.sQLEndDate + """')+1, 0)
+        WHERE T.FUTURE_MONTH >= DATEADD(MONTH, DATEDIFF(MONTH, 0, '""" + self.sQLStartDate + """'), 0)
+        AND T.FUTURE_MONTH <= DATEADD(MONTH, DATEDIFF(MONTH, 0, '""" + self.sQLEndDate + """'), 0)
         ORDER BY T.[FUTURE_MONTH]"""
 
-    self.fuelTransport = self.pullFromPRISM(queryStr, database = 'COMMODITIES')
+    fuelTransportTable = self.pullFromPRISM(queryStr, database = 'COMMODITIES')
+
+    fuelTransportTable['FUTURE_MONTH'] = pd.to_datetime(fuelTransportTable['FUTURE_MONTH'])
+
+    self.fuelTransport = fuelTransportTable[['FUTURE_MONTH', 'TRANSPORT_ADDER']]
 
 
 def importEmissionsPricesPrism(self):

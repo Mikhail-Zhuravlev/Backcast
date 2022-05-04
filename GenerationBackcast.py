@@ -4,8 +4,8 @@ from Dispatch import *
 #print(PRISMQuery.plantParameters('2021-01-01', '2022-01-01', 'ELGIN'))
 
 ElginHRCOParameters = {
-    'startDate': '01/01/2021',
-    'endDate': '12/31/2021',
+    'startDate': '01/01/2022',
+    'endDate': '3/31/2022',
     'fuelPoint': 'Chicago CityGates Midpoint',
     'gasDayStartHour': 0,
     'powerNode': 'NI HUB',
