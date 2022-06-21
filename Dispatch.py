@@ -66,7 +66,7 @@ def initialDispatch (dataTable):
     return dispatchTracker
     
 
-def bruteForceRunOptimization(self):
+def bruteForceRunOptimization(dispatchTracker):
 
     mergeDepth = 30
    
@@ -216,6 +216,41 @@ def bruteForceRunOptimization(self):
     return tempDispatchTracker
 
 
-def cleanOOTMRuns(self):
+def cleanOOTMRuns(dispatchTracker):
 
-    pass
+    tempDispatchTracker = dispatchTracker.copy()
+    
+    listLength = len(tempDispatchTracker)
+    
+    toDrop = []
+    
+    dispatchIndex = 1
+    
+    while dispatchIndex < (listLength - 1):
+        
+        if (tempDispatchTracker[dispatchIndex].isOn == 1):
+            
+            netMargin = tempDispatchTracker[dispatchIndex].incMargin - tempDispatchTracker[dispatchIndex].startCost
+            
+            if (netMargin <= 0):
+                
+                #merges the current ITM run with the proceeding and preceeding OoTM runs
+                tempDispatchTracker[dispatchIndex + 1].setMargin(
+                    tempDispatchTracker[dispatchIndex + 1].incMargin
+                    + tempDispatchTracker[dispatchIndex].incMargin
+                    + tempDispatchTracker[dispatchIndex - 1].incMargin
+                )
+
+                tempDispatchTracker[dispatchIndex + 1].setStartCost(tempDispatchTracker[dispatchIndex - 1].startCost)    
+                    
+                tempDispatchTracker[dispatchIndex + 1].setStart(tempDispatchTracker[dispatchIndex - 1].startIndex)
+
+                toDrop.append(dispatchIndex)
+                toDrop.append(dispatchIndex - 1)
+        
+        dispatchIndex += 1
+        
+    for index in sorted(toDrop, reverse=True):
+        del tempDispatchTracker[index]
+                              
+    return tempDispatchTracker
