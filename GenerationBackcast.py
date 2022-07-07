@@ -1,12 +1,15 @@
 
 from Dispatch import *
 from WriteToExcel import *
+import time
 
 #print(PRISMQuery.plantParameters('2021-01-01', '2022-01-01', 'ELGIN'))
 
+startTime = time.perf_counter()
+
 ElginHRCOParameters = {
     'startDate': '01/01/2022',
-    'endDate': '5/31/2022',
+    'endDate': '6/28/2022',
     'fuelPoint': 'Chicago CityGates Midpoint',
     'gasDayStartHour': 0,
     'powerNode': 'NI HUB',
@@ -43,14 +46,14 @@ for idx, dispatch in np.ndenumerate(dispatchTrackerV3):
 
 
 # writes output to file
-FolderDir = r'C:/Users/mzhuravlev/OneDrive - CEPM/PROJECTS/Python/TEST/'
-TemplateFile = 'HourlyDispatch.xlsx'
+FolderDir = r'C:/Users/mzhuravlev/OneDrive - CEPM/PROJECTS/Python/Backcast'
+TemplateFile = 'TEST.xlsx'
 
-WriteToFile(ElginHRCO.hourlyData,
-            FolderDir + TemplateFile, 
-            'Sheet1',
-            1, 
-            1)
+#WriteToFile(ElginHRCO.hourlyData,
+#            FolderDir + TemplateFile, 
+#            'Dispatch Summary (Python)',
+#            1, 
+#            1)
 
 os.chdir(FolderDir)
 os.system('start excel.exe "' + FolderDir + TemplateFile + '"')

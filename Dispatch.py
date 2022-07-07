@@ -6,10 +6,8 @@ from DispatchFunctions import *
 
 
 
-class GenerationAsset(PRISMData):
+class GenerationAsset(PRISMDataDownload):
     
-    populateInputs = populateInputs
-
     createHourlyTable = createHourlyTable
 
     alignHourlyParameters = alignHourlyParameters

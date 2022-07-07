@@ -122,6 +122,23 @@ def alignHourlyParameters(self):
 
     self.hourlyData.drop(self.hourlyData.filter(regex='_DROP$').columns.tolist(),axis=1, inplace=True)
 
+    excessColList = ['HB'
+    , 'MONTH_NUM'
+    , 'TPT_PROD_STGY_NUM'
+    , 'TPT_PROD_STGY_NAME'
+    , 'TPT_TEST_STGY_NUM'
+    , 'TPT_TEST_STGY_NAME'
+    , 'RUNHOURS'
+    , 'UNIT_HUB_BASIS_SYMBOL'
+    , 'CHANGED_BY'
+    , 'MODELED_IN_CXL'
+    ]
+    
+    self.hourlyData.drop(labels = excessColList
+    , axis = 1
+    , inplace = True
+    )
+
 
 def calculateHourlyMargins(self):
 
@@ -141,7 +158,7 @@ def calculateHourlyMargins(self):
     
     self.hourlyData['VOM_COST'] = self.hourlyData['VOM']  * self.hourlyData['DISPATCH_MW'] + self.hourlyData['NO_LOAD_COST']
 
-    self.hourlyData['START_COST'] = self.hourlyData['START_FUEL']  *  self.hourlyData[self.fuelPoint] + self.hourlyData['START_OM']
+    self.hourlyData['START_COST'] = self.hourlyData['START_FUEL']  *  ( self.hourlyData[self.fuelPoint] + self.hourlyData['TRANSPORT_ADDER'] ) + self.hourlyData['START_OM']
 
     self.hourlyData['NET_MARGIN'] = (
         self.hourlyData['POWER_REVENUE']
@@ -150,10 +167,10 @@ def calculateHourlyMargins(self):
         - self.hourlyData['VOM_COST']
     )
 
-    self.hourlyData['NMlessStart'] = (
-        self.hourlyData['NET_MARGIN']
-        - self.hourlyData['START_COST']
-    )
+#    self.hourlyData['NMlessStart'] = (
+#        self.hourlyData['NET_MARGIN']
+#        - self.hourlyData['START_COST']
+#    )
 
 
 

@@ -1,5 +1,44 @@
 import pandas as pd
 import numpy as np
+import pyodbc
+
+def pullFromPRISM(self, queryStr, database, server = 'DC01DAPP01'):
+
+    self.conn = pyodbc.connect(
+        'Driver={SQL Server Native Client 11.0};'
+        'Server=' + server +';'
+        'Database=' + database + ';'
+        'Uid=Prismreader;pwd=Pri$m2016%;'
+        )
+    
+    with self.conn:
+        
+        return pd.read_sql_query(queryStr, self.conn)
+
+
+def writeToPRISM(self, df, database, server = 'DC01DAPP01'):
+
+    self.conn = pyodbc.connect(
+        'Driver={SQL Server Native Client 11.0};'
+        'Server=' + server +';'
+        'Database=' + database + ';'
+        'Uid=PrismExec;pwd=Pri$m2018%;'
+        )
+    
+    cursor = self.conn.cursor()
+
+    inputString = """exec dbo.InsertElginHRCOSettlementDetails @dt=?,@fuel=?,@strt=?,@vom=?,@rev=?,@mrgn=?,@hrs=?,@prm=?,@net=?;"""
+    
+    for i in df.itertuples():
+        
+        values = i[1:]
+        
+        cursor.execute(inputString, values)
+        
+        self.conn.commit()
+
+    cursor.close()
+
 
 def populateInputs(self):
 
