@@ -25,7 +25,7 @@ def initialDispatch (dataTable):
     for index, row in dataTable.iterrows():
         
         priorHourMargin = hourMargin
-        hourMargin = dataTable['NET_MARGIN'][index]
+        hourMargin = dataTable['MARGIN'][index]
         
         #print('index:{0} priorHourMargin:{1} hourMargin:{2} dispatchIndex:{3}'.format(
         #    ("{:.0f}".format(index)),
@@ -53,7 +53,7 @@ def initialDispatch (dataTable):
                 
                 priorStart = dispatchTracker[dispatchIndex-1].startIndex
                 
-                dispatchMargin = dataTable['NET_MARGIN'][priorStart:index].sum()
+                dispatchMargin = dataTable['MARGIN'][priorStart:index].sum()
                 
                 dispatchTracker[dispatchIndex-1].setEnd(index-1)
                 

@@ -47,6 +47,8 @@ def createHourlyTable(self):
     
     self.hourlyData['MONTH'] = pd.DatetimeIndex(self.hourlyData['DateTime']).month
     
+    self.hourlyData['DAY'] = pd.DatetimeIndex(self.hourlyData['DateTime']).day
+    
     self.hourlyData['FUTURE_MONTH'] = pd.to_datetime({'year':self.hourlyData['YEAR'],
                                         'month':self.hourlyData['MONTH'],
                                         'day':1})
@@ -160,7 +162,7 @@ def calculateHourlyMargins(self):
 
     self.hourlyData['START_COST'] = self.hourlyData['START_FUEL']  *  ( self.hourlyData[self.fuelPoint] + self.hourlyData['TRANSPORT_ADDER'] ) + self.hourlyData['START_OM']
 
-    self.hourlyData['NET_MARGIN'] = (
+    self.hourlyData['MARGIN'] = (
         self.hourlyData['POWER_REVENUE']
         - self.hourlyData['FUEL_COST']
         - self.hourlyData['EMISSION_COST']
