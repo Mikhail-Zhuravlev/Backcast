@@ -1,15 +1,24 @@
-
-from Dispatch import *
+from datetime import *
+from DispatchFunctions import *
 from WriteToExcel import *
+from calendar import monthrange
+import json
 import time
 
 #print(PRISMQuery.plantParameters('2021-01-01', '2022-01-01', 'ELGIN'))
 
-startTime = time.perf_counter()
+#startTime = time.perf_counter()
+endaDate = np.datetime64(datetime.datetime.today(), 'D') + np.timedelta64(2, 'D')
+
+# PortfolioHierarchy = json.loads(
+#         open(
+#             ParameterDir + 'PortfolioHierarchy.json'
+#         ).read()
+#     )
 
 ElginHRCOParameters = {
-    'startDate': '01/01/2022',
-    'endDate': '7/13/2022',
+    'startDate': '2022-01-01',
+    'endDate': endaDate,
     'fuelPoint': 'Chicago CityGates Midpoint',
     'gasDayStartHour': 0,
     'powerNode': 'NI HUB',
@@ -59,7 +68,14 @@ ElginHRCO.hourlyData.loc[ElginHRCO.hourlyData['runHour'] == 0, 'FUEL_COST'] = 0
 
 ElginHRCO.hourlyData.loc[ElginHRCO.hourlyData['runHour'] == 0, 'POWER_REVENUE'] = 0
 
-ElginHRCO.hourlyData.loc[(ElginHRCO.hourlyData['DAY'] == 1) & (ElginHRCO.hourlyData['HE'] == 1) , 'PREMIUM'] = 303800
+for iYear in pd.unique(ElginHRCO.hourlyData['YEAR']):
+
+        for iMonth in range(1,13):
+
+            ElginHRCO.hourlyData.loc[(ElginHRCO.hourlyData['YEAR'] == iYear) &
+             (ElginHRCO.hourlyData['YEAR'] == iYear) & 
+             (ElginHRCO.hourlyData['MONTH'] == iMonth) & 
+             (ElginHRCO.hourlyData['HE'] == 1) , 'PREMIUM'] = 303800/monthrange(iYear, iMonth)[1]
 
 ElginHRCO.hourlyData['MARGIN'] = ElginHRCO.hourlyData['MARGIN'] - ElginHRCO.hourlyData['START_COST']
 

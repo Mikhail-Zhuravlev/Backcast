@@ -1,0 +1,43 @@
+
+{
+"ELGINHRCO":
+    {   
+        "plantCode": "ELGINHRCO",
+        "fuelPoint": "Chicago CityGates Midpoint",
+        "gasDayStartHour": 0,
+        "powerNode": "NI HUB",
+        "isoName": "PJM",
+        "minRun": 0,
+        "monthly_premium": 303800
+    },
+"ELGIN":
+    {   
+        "plantCode": "ELGIN",
+        "fuelPoint": "Chicago CityGates Midpoint",
+        "gasDayStartHour": 9,
+        "powerNode": "COMED",
+        "isoName": "PJM",
+        "minRun": 0,
+        "monthly_premium": 0
+    },
+"TVTONHRCO":
+    {   
+        "plantCode": "TVTONHRCO",
+        "fuelPoint": "AGT CityGates Midpoint",
+        "gasDayStartHour": 9,
+        "powerNode": "H.INTERNAL_HUB",
+        "isoName": "ISONE",
+        "minRun": 0,
+        "monthly_premium": 0
+    },
+"TVTON":
+    {   
+        "plantCode": "TVTON",
+        "fuelPoint": "AGT CityGates Midpoint",
+        "gasDayStartHour": 9,
+        "powerNode": "UN.TIVERTON18.0TIVR",
+        "isoName": "ISONE",
+        "minRun": 0,
+        "monthly_premium": 0
+    }
+}
