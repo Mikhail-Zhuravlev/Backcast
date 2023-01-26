@@ -1,6 +1,6 @@
 
 #from click import pass_context
-from PRISM import *
+from PRISMDataClass import *
 
 from DispatchFunctions import *
 

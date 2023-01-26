@@ -17,13 +17,16 @@ endaDate = np.datetime64(datetime.datetime.today(), 'D') + np.timedelta64(2, 'D'
 #     )
 
 ElginHRCOParameters = {
-    'startDate': '2022-01-01',
-    'endDate': endaDate,
-    'fuelPoint': 'Chicago CityGates Midpoint',
-    'gasDayStartHour': 0,
-    'powerNode': 'NI HUB',
-    'isoName': 'PJM',
-    'plantCode': 'ELGINHRCO',
+    'startDate': '2021-03-31',
+    'endDate': '2021-10-31',
+    'CO2Source': 'PRISM',
+    'fuelSource': 'PRISM',
+    'fuelPoint': 'AGT CityGates Midpoint',
+    'gasDayStartHour': 10,
+    'powerSource': 'PRISM',
+    'powerNode': 'H.INTERNAL_HUB',
+    'isoName': 'ISONE',
+    'plantCode': 'TVTONHRCO',
     'minRun': 0}
 
 
@@ -75,21 +78,23 @@ for iYear in pd.unique(ElginHRCO.hourlyData['YEAR']):
             ElginHRCO.hourlyData.loc[(ElginHRCO.hourlyData['YEAR'] == iYear) &
              (ElginHRCO.hourlyData['YEAR'] == iYear) & 
              (ElginHRCO.hourlyData['MONTH'] == iMonth) & 
-             (ElginHRCO.hourlyData['HE'] == 1) , 'PREMIUM'] = 303800/monthrange(iYear, iMonth)[1]
+             (ElginHRCO.hourlyData['HE'] == 1) , 'PREMIUM'] = 915810/monthrange(iYear, iMonth)[1]
 
 ElginHRCO.hourlyData['MARGIN'] = ElginHRCO.hourlyData['MARGIN'] - ElginHRCO.hourlyData['START_COST']
 
 ElginHRCO.hourlyData = ElginHRCO.hourlyData.loc[ElginHRCO.hourlyData['DATE']>= ElginHRCO.startDate].copy()
 
-ElginHRCO.summary = ElginHRCO.hourlyData[['DATE', 'FUEL_COST', 'START_COST', 'VOM_COST', 'POWER_REVENUE', 'MARGIN', 'isRunning', 'PREMIUM']].groupby(by='DATE', ).sum()
+ElginHRCO.summary = ElginHRCO.hourlyData[['DATE', 'FUEL_COST', 'START_COST', 'VOM_COST', 'EMISSION_COST',  'POWER_REVENUE', 'MARGIN', 'isRunning', 'PREMIUM']].groupby(by='DATE', ).sum()
 
 ElginHRCO.summary['NET_MARGIN'] = ElginHRCO.summary['PREMIUM'] - ElginHRCO.summary['MARGIN']
 
 #ElginHRCO.summary = ElginHRCO.summary.loc[ElginHRCO.summary['DATE'] >= ElginHRCO.startDate].copy()
 
 # writes output to file
-FolderDir = r'C:/Users/mzhuravlev/OneDrive - CEPM/PROJECTS/Python/Backcast/'
+FolderDir = r'C:/Users/mzhuravlev/Desktop/' #r'C:/Users/mzhuravlev/OneDrive - CEPM/PROJECTS/Python/Backcast/'
 TemplateFile = 'TEST.xlsx'
+
+print("Writing to file...")
 
 WriteToFile(ElginHRCO.hourlyData,
             FolderDir + TemplateFile, 
@@ -132,6 +137,6 @@ def writeToPRISM(df, database, server = 'DC01DAPP01'):
 
     cursor.close()
 
-writeToPRISM(ElginHRCO.summary, 'TPT', server = 'DC01DAPP01')
+#writeToPRISM(ElginHRCO.summary, 'TPT', server = 'DC01DAPP01')
 
 print("Backcast complete.")

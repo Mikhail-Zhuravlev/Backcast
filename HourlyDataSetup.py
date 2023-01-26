@@ -3,8 +3,10 @@ import datetime
 import pandas as pd
 
 
+
 class dispatchPeriod:
-    
+#Agrregates blocks of hourly data in order to make dispatch optimization easier
+     
     def __init__(self, isOn = 0, startindex = 0, endIndex = 0, incMargin = 0, startCost = 0):
         self.isOn = isOn
         self.startIndex = startindex
@@ -36,12 +38,15 @@ class dispatchPeriod:
 
 
 def createHourlyTable(self):
+#Generates the table onto witch all other data is mapped
 
     dtRange =  pd.date_range(start = self.startDate, end = self.endDate, freq='1H')
 
     self.hourlyData = pd.DataFrame({ 'DateTime': dtRange})
         
     self.hourlyData['DATE'] = pd.DatetimeIndex(self.hourlyData['DateTime']).date
+    
+    self.hourlyData['FUEL_DATE'] = pd.DatetimeIndex(self.hourlyData['DateTime'].shift(self.gasDayStartHour)).date
     
     self.hourlyData['YEAR'] = pd.DatetimeIndex(self.hourlyData['DateTime']).year
     
@@ -71,6 +76,7 @@ def createHourlyTable(self):
 
 
 def alignHourlyParameters(self):
+#Maps together curves and parameters at the hourly granularity
 
     self.createHourlyTable()
 
@@ -98,9 +104,10 @@ def alignHourlyParameters(self):
         self.hourlyData,
         self.fuelPrice,
         how = 'left',
-        on = 'DATE',
+        on = 'FUEL_DATE',
         suffixes=('', '_DROP')
         ).fillna(0)
+
 
     self.hourlyData.drop(self.hourlyData.filter(regex='_DROP$').columns.tolist(),axis=1, inplace=True)
 
@@ -143,7 +150,7 @@ def alignHourlyParameters(self):
 
 
 def calculateHourlyMargins(self):
-
+    
     self.hourlyData['DISPATCH_MW'] = self.hourlyData['MAX_CAP']
 
     self.hourlyData['POWER_REVENUE'] = self.hourlyData[self.powerNode] * self.hourlyData['DISPATCH_MW']
