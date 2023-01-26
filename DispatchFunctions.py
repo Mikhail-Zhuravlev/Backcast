@@ -1,10 +1,7 @@
 
 #from click import pass_context
-from PRISM import *
-
+from PRISMDataClass import *
 from HourlyDataSetup import *
-
-
 
 class GenerationAsset(PRISMDataDownload):
     
@@ -42,11 +39,11 @@ def initialDispatch (dataTable):
                 isOn = 1
             
             dispatchTracker.append(dispatchPeriod(
-                isOn,
-                index,
-                0,
-                0,
-                dataTable['START_COST'][index]
+                isOn = isOn,
+                startindex = index,
+                endIndex = 0,
+                incMargin = 0,
+                startCost = dataTable['START_COST'][index]
             ))
             
             if dispatchIndex > 0:
@@ -76,8 +73,9 @@ def bruteForceRunOptimization(dispatchTracker):
     
     updatedDispatch = []
     
-    #Check each combination of dispatches
     dispatchIndex = 0 
+
+    #Check each combination of dispatches
     while dispatchIndex < (listLength - 2):
         
         #cannot merge past the end of the list
@@ -206,6 +204,7 @@ def bruteForceRunOptimization(dispatchTracker):
             updatedDispatch.append(tempDispatchTracker[dispatchIndex])
             
             dispatchIndex += 1
+
 
     for index in sorted(set(toDrop), reverse=True):
 

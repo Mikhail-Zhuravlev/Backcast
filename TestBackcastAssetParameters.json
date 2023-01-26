@@ -1,0 +1,13 @@
+
+{
+"TVTON":
+    {   
+        "plantCode": "TVTONHRCO",
+        "fuelPoint": "AGT CityGates Midpoint",
+        "gasDayStartHour": 9,
+        "powerNode": "H.INTERNAL_HUB",
+        "isoName": "ISONE",
+        "minRun": 0,
+        "monthly_premium": 0
+    }
+}

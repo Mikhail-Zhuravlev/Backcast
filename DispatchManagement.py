@@ -13,6 +13,8 @@ def runDispatch(BackcastParameters, startDate, endaDate):
 
     for iPlant in BackcastParameters:
         
+        print("Running Backcast for "+ iPlant)
+
         BackcastParameters[iPlant]["startDate"] = startDate
 
         BackcastParameters[iPlant]["endDate"] = endaDate

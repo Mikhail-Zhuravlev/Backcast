@@ -158,7 +158,7 @@ def importFuelPricePrism(self):
     fuelPriceTable['Date'] = pd.DatetimeIndex(fuelPriceTable['VALUE_DATE']).date
 
     self.fuelPrice = fuelPriceTable[['Date', 'VALUE']].rename(
-            columns={'Date' : 'DATE', 'VALUE' : self.fuelPoint})
+            columns={'Date' : 'FUEL_DATE', 'VALUE' : self.fuelPoint})
 
 
 def importFuelTransportPrism(self):
