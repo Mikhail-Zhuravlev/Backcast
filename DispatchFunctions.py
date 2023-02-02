@@ -12,8 +12,9 @@ class GenerationAsset(PRISMDataDownload):
     calculateHourlyMargins = calculateHourlyMargins
 
 
-def initialDispatch (dataTable):
-    
+def dispatchPeriodAggregator (dataTable):
+#Aggregates hourly dispatch into periods of in-the-money and out-of-the-money
+
     hourMargin = 0
     runHour = 0
     dispatchIndex = 0
@@ -33,13 +34,13 @@ def initialDispatch (dataTable):
         
         if priorHourMargin / hourMargin <= 0:
             
-            isOn = 0
+            inTheMoney = 0
             
             if hourMargin > 0:
-                isOn = 1
+                inTheMoney = 1
             
             dispatchTracker.append(dispatchPeriod(
-                isOn = isOn,
+                incInTheMoney = inTheMoney,
                 startindex = index,
                 endIndex = 0,
                 incMargin = 0,
@@ -71,7 +72,7 @@ def bruteForceRunOptimization(dispatchTracker):
     
     toDrop = []
     
-    updatedDispatch = []
+    #updatedDispatch = []
     
     dispatchIndex = 0 
 
@@ -88,7 +89,7 @@ def bruteForceRunOptimization(dispatchTracker):
                 mergeDepth = 0
              
         #is the plant economical in this period 
-        isOn = tempDispatchTracker[dispatchIndex].isOn
+        incInTheMoney = tempDispatchTracker[dispatchIndex].incInTheMoney
         
         #is it worth merging this dispatch forward
         isEconomical = (
@@ -96,14 +97,14 @@ def bruteForceRunOptimization(dispatchTracker):
             + tempDispatchTracker[dispatchIndex + 1].incMargin
         )
         
-        if ((isOn == 1) & (isEconomical > 0)):
+        if ((incInTheMoney == 1) & (isEconomical > 0)):
         
             bestMargin = tempDispatchTracker[dispatchIndex].incMargin
-            bestStart = dispatchIndex
+            #bestStart = dispatchIndex
             bestEnd = dispatchIndex
             
             tempMargin = tempDispatchTracker[dispatchIndex].incMargin
-            startFwdMerge = dispatchIndex
+            #startFwdMerge = dispatchIndex
             
             #print(('Current Margin: {0}, Start: {1}, End: {2}. Best Margin: {3}, Start: {4}, End: {5}.').format(
             #'{:,.2f}'.format(tempMargin),
@@ -143,7 +144,7 @@ def bruteForceRunOptimization(dispatchTracker):
                                 
                 if tempMargin >= bestMargin:
                         bestMargin = tempMargin
-                        bestStart = dispatchIndex
+                        #bestStart = dispatchIndex
                         bestEnd = dispatchIndex + 2 * (depth + 1)
 
                 #print(('Current Margin: {0}, Start: {1}, End: {2}. Best Margin: {3}, Start: {4}, End: {5}.').format(
@@ -155,15 +156,7 @@ def bruteForceRunOptimization(dispatchTracker):
                 #bestEnd))
                 
             #merge best margins forward
-            tempDispatchTracker[bestEnd].setStart(tempDispatchTracker[dispatchIndex].startIndex)
-
-            tempDispatchTracker[bestEnd].setStartCost(tempDispatchTracker[dispatchIndex].startCost)
-
-            tempDispatchTracker[bestEnd].setMargin(bestMargin)
-            
-            for dropRun in range (dispatchIndex, bestEnd):
-                
-                toDrop.append(dropRun)
+            mergeDispatchTrackerRuns(tempDispatchTracker, dispatchIndex, bestEnd)
             
             #print(("Merged: {0}-{1} {2}").format(
             #    dispatchIndex,
@@ -171,15 +164,15 @@ def bruteForceRunOptimization(dispatchTracker):
             #    str(tempDispatchTracker[dispatchIndex])
             #))
             
-            updatedDispatch.append(
-                dispatchPeriod (
-                    isOn = 1,
-                    startindex = tempDispatchTracker[dispatchIndex].startIndex,
-                    endIndex = tempDispatchTracker[bestEnd].endIndex,
-                    incMargin = bestMargin,
-                    startCost = tempDispatchTracker[dispatchIndex].startCost
-                )
-            )     
+            # updatedDispatch.append(
+            #     dispatchPeriod (
+            #         incInTheMoney = 1,
+            #         startindex = tempDispatchTracker[dispatchIndex].startIndex,
+            #         endIndex = tempDispatchTracker[bestEnd].endIndex,
+            #         incMargin = bestMargin,
+            #         startCost = tempDispatchTracker[dispatchIndex].startCost
+            #     )
+            # )     
         
             #drop merged dispatches
             for dropIndex in range (dispatchIndex, bestEnd):
@@ -201,10 +194,9 @@ def bruteForceRunOptimization(dispatchTracker):
             #    str(tempDispatchTracker[dispatchIndex])
             #))
             
-            updatedDispatch.append(tempDispatchTracker[dispatchIndex])
+            #updatedDispatch.append(tempDispatchTracker[dispatchIndex])
             
             dispatchIndex += 1
-
 
     for index in sorted(set(toDrop), reverse=True):
 
@@ -213,7 +205,129 @@ def bruteForceRunOptimization(dispatchTracker):
     return tempDispatchTracker
 
 
+def mergeDispatchTrackerRuns(tempDispatchTracker, earlierindex, latterIndex):
+            #merge best margins forward
+            
+            targetPeriod = tempDispatchTracker[earlierindex]
+
+            targetPeriod.setEnd(tempDispatchTracker[latterIndex].endIndex)
+
+            for i in (latterIndex, earlierindex, -1):
+
+                targetPeriod.addMargin(tempDispatchTracker[i].incMargin)
+
+                del tempDispatchTracker[i]
+
+
+
+def flagValidRuns(dispatchTracker, minMargin = 0, minRunTime = 0):
+#Populates .isDispatching flag based on min criteria 1 = yes, 0 = no
+
+    for dispatchPeriod in dispatchTracker:
+        
+        isValid = 1
+
+        if dispatchPeriod.runtime() < minRunTime:
+            #does dispatch meet min run time
+            isValid = isValid * 0
+        
+        if dispatchPeriod.netMargin() < minMargin:
+            #is dispatch Economical 
+            isValid = isValid * 0
+        
+        dispatchPeriod.isDispatching = isValid
+
+
+
+def fixMinRunTime(hourlyData, dispatchTracker, targetPeriodIndex, minRunTime):
+
+    lowestCostHours = findLowestCostHours(hourlyData, dispatchTracker, targetPeriodIndex, minRunTime)
+
+    mergeForward = mergeDispatchPeriods()
+
+    mergeBackward = 1
+
+    bestScenario = max(lowestCostHours.netMargin, mergeForward.netMargin, mergeBackward.netMargin)
+
+    if bestScenario == lowestCostHours.netMargin:
+        x=1
+    
+    elif bestScenario == lowestCostHours.netMargin:
+        x=1
+    
+    elif bestScenario == lowestCostHours.netMargin:
+        x=1
+
+    else:
+        x = "error"
+
+
+def findLowestCostHours(hourlyData, dispatchTracker, targetPeriodIndex, minRunTime):
+
+    updatedDispatchTracker = dispatchTracker.copy()
+
+    targetPeriod = updatedDispatchTracker[targetPeriodIndex]
+    
+    currentRunLength = targetPeriod.runtime()
+
+    while currentRunLength < minRunTime:
+        
+        previousHourMargin = hourlyData[targetPeriod.startIndex-1]['MARGIN']
+        
+        nextHourMargin = hourlyData[targetPeriod.endIndex+1]['MARGIN']
+        
+        if previousHourMargin > nextHourMargin:
+
+            targetPeriod.startIndex = targetPeriod.startIndex - 1
+
+            updatedDispatchTracker[targetPeriodIndex - 1].endIndex = targetPeriod.startIndex - 1
+        
+        else:
+
+            targetPeriod.endIndex = targetPeriod.endIndex - 1
+
+            updatedDispatchTracker[targetPeriodIndex + 1].startIndex = targetPeriod.endIndex + 1
+    
+        currentRunLength = targetPeriod.runtime()
+
+    return updatedDispatchTracker
+
+
+def mergeDispatchPeriods(dispatchTracker, targetPeriodIndex, minRunTime, direction=1):
+
+    updatedDispatchTracker = dispatchTracker.copy()
+
+    targetPeriod = updatedDispatchTracker[targetPeriodIndex]
+    
+    currentRunLength = targetPeriod.runtime()
+
+    while currentRunLength < minRunTime:
+    
+        ootmPeriod = updatedDispatchTracker[targetPeriodIndex + 1 * direction]
+
+        itmPeriod = updatedDispatchTracker[targetPeriodIndex + 2 * direction]
+    
+        if itmPeriod.isDispatching:
+            #if the ITM period is already valid, the margins impact is only
+            #the intermediate OoTM period margins and start avoidance
+            
+            marginModifier = itmPeriod.startCost + ootmPeriod.incMargin
+
+        else:
+            #if the ITM period is NOT already invalid, the margins impact is 
+            #the margins from both intermediate OoTM and ITM periods
+
+            marginModifier = itmPeriod.incMargin + ootmPeriod.incMargin
+
+        #merge the target period into the other period
+
+
+
+    return updatedDispatchTracker, marginModifier
+
+
 def cleanOOTMRuns(dispatchTracker):
+#Drops runs that are incrementally in the money but not economical
 
     tempDispatchTracker = dispatchTracker.copy()
     
@@ -225,7 +339,7 @@ def cleanOOTMRuns(dispatchTracker):
     
     while dispatchIndex < (listLength - 1):
         
-        if (tempDispatchTracker[dispatchIndex].isOn == 1):
+        if (tempDispatchTracker[dispatchIndex].incInTheMoney == 1):
             
             netMargin = tempDispatchTracker[dispatchIndex].incMargin - tempDispatchTracker[dispatchIndex].startCost
             

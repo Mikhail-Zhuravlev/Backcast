@@ -7,16 +7,23 @@ import pandas as pd
 class dispatchPeriod:
 #Agrregates blocks of hourly data in order to make dispatch optimization easier
      
-    def __init__(self, isOn = 0, startindex = 0, endIndex = 0, incMargin = 0, startCost = 0):
-        self.isOn = isOn
+    def __init__(self, incInTheMoney = 0, startindex = 0, endIndex = 0, incMargin = 0, startCost = 0, isDispatching = 0):
+        
+        self.incInTheMoney = incInTheMoney
+        
         self.startIndex = startindex
+        
         self.endIndex = endIndex
+        
         self.incMargin = incMargin
+        
         self.startCost = startCost
         
+        self.isDispatching = isDispatching
+        
     def __str__(self):
-        return 'isOn: {0}; startIndex: {1}; endIndex: {2}; incMargin: {3}; startCost: {4}; Net: {5}'.format(
-            "{:.0f}".format(self.isOn),
+        return 'incInTheMoney: {0}; startIndex: {1}; endIndex: {2}; incMargin: {3}; startCost: {4}; Net: {5}'.format(
+            "{:.0f}".format(self.incInTheMoney),
             "{:.0f}".format(self.startIndex),
             "{:.0f}".format(self.endIndex), 
             "{:.0f}".format(self.incMargin),
@@ -35,6 +42,21 @@ class dispatchPeriod:
         
     def setStartCost(self, startCost):
         self.startCost = startCost
+
+    def addMargin(self, addMargin):
+        self.incMargin = self.incMargin + addMargin
+
+    def runtime(self):
+        return (self.endIndex - self.startIndex + 1)
+    
+    def netMargin(self):
+        return (self.incMargin - self.startCost)
+
+    def dispatchValidation(self, minMargin=0, minRunTime=0):
+        
+        if (self.runtime > minRunTime) and (self.netMargin > minMargin):
+            ### INCOMPLETE
+            return "incomplete"
 
 
 def createHourlyTable(self):
