@@ -3,6 +3,7 @@ import numpy as np
 import pyodbc
 
 
+
 def writeToPRISM(df, database, server = 'DC01DAPP01'):
 
     conn = pyodbc.connect(
@@ -18,7 +19,7 @@ def writeToPRISM(df, database, server = 'DC01DAPP01'):
     
     for i in df.itertuples():
         
-        values = i[1:]
+        values = i[0:]
         
         cursor.execute(inputString, values)
         

@@ -15,7 +15,7 @@ class GenerationAsset(PRISMDataDownload):
     calculateHourlyMargins = calculateHourlyMargins
 
 
-def initialDispatch (dataTable):
+def dispatchPeriodAggregator (dataTable):
     
     hourMargin = 0
     runHour = 0
@@ -36,13 +36,13 @@ def initialDispatch (dataTable):
         
         if priorHourMargin / hourMargin <= 0:
             
-            isOn = 0
+            incInTheMoney = 0
             
             if hourMargin > 0:
-                isOn = 1
+                incInTheMoney = 1
             
             dispatchTracker.append(dispatchPeriod(
-                isOn,
+                incInTheMoney,
                 index,
                 0,
                 0,
@@ -90,7 +90,7 @@ def bruteForceRunOptimization(dispatchTracker):
                 mergeDepth = 0
              
         #is the plant economical in this period 
-        isOn = tempDispatchTracker[dispatchIndex].isOn
+        incInTheMoney = tempDispatchTracker[dispatchIndex].incInTheMoney
         
         #is it worth merging this dispatch forward
         isEconomical = (
@@ -98,7 +98,7 @@ def bruteForceRunOptimization(dispatchTracker):
             + tempDispatchTracker[dispatchIndex + 1].incMargin
         )
         
-        if ((isOn == 1) & (isEconomical > 0)):
+        if ((incInTheMoney == 1) & (isEconomical > 0)):
         
             bestMargin = tempDispatchTracker[dispatchIndex].incMargin
             bestStart = dispatchIndex
@@ -175,7 +175,7 @@ def bruteForceRunOptimization(dispatchTracker):
             
             updatedDispatch.append(
                 dispatchPeriod (
-                    isOn = 1,
+                    incInTheMoney = 1,
                     startindex = tempDispatchTracker[dispatchIndex].startIndex,
                     endIndex = tempDispatchTracker[bestEnd].endIndex,
                     incMargin = bestMargin,
@@ -226,7 +226,7 @@ def cleanOOTMRuns(dispatchTracker):
     
     while dispatchIndex < (listLength - 1):
         
-        if (tempDispatchTracker[dispatchIndex].isOn == 1):
+        if (tempDispatchTracker[dispatchIndex].incInTheMoney == 1):
             
             netMargin = tempDispatchTracker[dispatchIndex].incMargin - tempDispatchTracker[dispatchIndex].startCost
             

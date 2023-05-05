@@ -7,7 +7,7 @@ import json
 
 #startTime = time.perf_counter()
 
-def runDispatch(BackcastParameters, startDate, endaDate):
+def runDispatch(BackcastParameters, startDate,  endaDate):
     
     DispatchDict= {}
 
@@ -27,7 +27,7 @@ def runDispatch(BackcastParameters, startDate, endaDate):
 
         DispatchDict[iPlant].calculateHourlyMargins()
 
-        unmergedDispatches = initialDispatch(DispatchDict[iPlant].hourlyData)
+        unmergedDispatches = dispatchPeriodAggregator(DispatchDict[iPlant].hourlyData)
 
         bruteForceDispatched = bruteForceRunOptimization(unmergedDispatches)
 
@@ -46,7 +46,7 @@ def runDispatch(BackcastParameters, startDate, endaDate):
 
         for idx, dispatch in np.ndenumerate(DispatchDict[iPlant].cleanDispatch):
 
-            if dispatch.isOn == 1:
+            if dispatch.incInTheMoney == 1:
             
                 for iRunHour in range(dispatch.startIndex, dispatch.endIndex + 1):
                 
@@ -61,6 +61,7 @@ def runDispatch(BackcastParameters, startDate, endaDate):
 
 def summarizeHourlyMargin (hourlyDispatchData):
     
+
     hourlyDispatchData.loc[hourlyDispatchData['runHour'] != 1, 'START_COST'] = 0
 
     hourlyDispatchData.loc[hourlyDispatchData['runHour'] == 0, 'MARGIN'] = 0

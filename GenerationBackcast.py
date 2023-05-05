@@ -18,7 +18,7 @@ endaDate = np.datetime64(datetime.datetime.today(), 'D') + np.timedelta64(2, 'D'
 
 ElginHRCOParameters = {
     'startDate': '2021-03-31',
-    'endDate': '2021-10-31',
+    'endDate': '2021-05-01',
     'CO2Source': 'PRISM',
     'fuelSource': 'PRISM',
     'fuelPoint': 'AGT CityGates Midpoint',
@@ -39,7 +39,7 @@ ElginHRCO.alignHourlyParameters()
 
 ElginHRCO.calculateHourlyMargins()
 
-unmergedDispatches = initialDispatch(ElginHRCO.hourlyData)
+unmergedDispatches = dispatchPeriodAggregator(ElginHRCO.hourlyData)
 
 bruteForceDispatched = bruteForceRunOptimization(unmergedDispatches)
 
@@ -47,29 +47,29 @@ dispatchTrackerV3 = cleanOOTMRuns(bruteForceDispatched)
 
 ElginHRCO.hourlyData['runHour'] = 0
 
-ElginHRCO.hourlyData['isRunning'] = 0
+ElginHRCO.hourlyData['isDispatching'] = 0
 
 ElginHRCO.hourlyData['PREMIUM'] = 0
 
 for idx, dispatch in np.ndenumerate(dispatchTrackerV3):
 
-    if dispatch.isOn == 1:
+    if dispatch.incInTheMoney == 1:
     
         for iRunHour in range(dispatch.startIndex, dispatch.endIndex + 1):
         
             ElginHRCO.hourlyData['runHour'][iRunHour] = iRunHour - dispatch.startIndex + 1
-            ElginHRCO.hourlyData['isRunning'][iRunHour] = 1
+            ElginHRCO.hourlyData['isDispatching'][iRunHour] = 1
 
 #CLean this up in a seperate function
 ElginHRCO.hourlyData.loc[ElginHRCO.hourlyData['runHour'] != 1, 'START_COST'] = 0
 
-ElginHRCO.hourlyData.loc[ElginHRCO.hourlyData['runHour'] == 0, 'MARGIN'] = 0
+#ElginHRCO.hourlyData.loc[ElginHRCO.hourlyData['runHour'] == 0, 'MARGIN'] = 0
 
-ElginHRCO.hourlyData.loc[ElginHRCO.hourlyData['runHour'] == 0, 'VOM_COST'] = 0
+#ElginHRCO.hourlyData.loc[ElginHRCO.hourlyData['runHour'] == 0, 'VOM_COST'] = 0
 
-ElginHRCO.hourlyData.loc[ElginHRCO.hourlyData['runHour'] == 0, 'FUEL_COST'] = 0
+#ElginHRCO.hourlyData.loc[ElginHRCO.hourlyData['runHour'] == 0, 'FUEL_COST'] = 0
 
-ElginHRCO.hourlyData.loc[ElginHRCO.hourlyData['runHour'] == 0, 'POWER_REVENUE'] = 0
+#ElginHRCO.hourlyData.loc[ElginHRCO.hourlyData['runHour'] == 0, 'POWER_REVENUE'] = 0
 
 for iYear in pd.unique(ElginHRCO.hourlyData['YEAR']):
 
@@ -84,7 +84,7 @@ ElginHRCO.hourlyData['MARGIN'] = ElginHRCO.hourlyData['MARGIN'] - ElginHRCO.hour
 
 ElginHRCO.hourlyData = ElginHRCO.hourlyData.loc[ElginHRCO.hourlyData['DATE']>= ElginHRCO.startDate].copy()
 
-ElginHRCO.summary = ElginHRCO.hourlyData[['DATE', 'FUEL_COST', 'START_COST', 'VOM_COST', 'EMISSION_COST',  'POWER_REVENUE', 'MARGIN', 'isRunning', 'PREMIUM']].groupby(by='DATE', ).sum()
+ElginHRCO.summary = ElginHRCO.hourlyData[['DATE', 'FUEL_COST', 'START_COST', 'VOM_COST', 'EMISSION_COST',  'POWER_REVENUE', 'MARGIN', 'isDispatching', 'PREMIUM']].groupby(by='DATE', ).sum()
 
 ElginHRCO.summary['NET_MARGIN'] = ElginHRCO.summary['PREMIUM'] - ElginHRCO.summary['MARGIN']
 

@@ -20,19 +20,24 @@ def dispatchPeriodAggregator (dataTable):
     dispatchIndex = 0
     dispatchTracker = []
     
-    for index, row in dataTable.iterrows():
+    for index, currentHour in dataTable.iterrows():
         
         priorHourMargin = hourMargin
-        hourMargin = dataTable['MARGIN'][index]
         
-        #print('index:{0} priorHourMargin:{1} hourMargin:{2} dispatchIndex:{3}'.format(
-        #    ("{:.0f}".format(index)),
-        #    ("{:.0f}".format(priorHourMargin)),
-        #    "{:.0f}".format(hourMargin),
-        #    "{:.0f}".format(dispatchIndex)
-        #))
+        hourMargin = currentHour['MARGIN']
         
-        if priorHourMargin / hourMargin <= 0:
+        if hourMargin == 0: 
+            hourMargin = -.01 
+
+        #For testing
+        print('index:{0} priorHourMargin:{1} hourMargin:{2} dispatchIndex:{3}'.format(
+           ("{:.0f}".format(index)),
+           ("{:.0f}".format(priorHourMargin)),
+           "{:.0f}".format(hourMargin),
+           "{:.0f}".format(dispatchIndex-1)
+        ))
+        
+        if (priorHourMargin / hourMargin) <= 0:
             
             inTheMoney = 0
             
@@ -88,10 +93,10 @@ def bruteForceRunOptimization(dispatchTracker):
                 
                 mergeDepth = 0
              
-        #is the plant economical in this period 
+        #is the plant economical in this period on an hourly basis
         incInTheMoney = tempDispatchTracker[dispatchIndex].incInTheMoney
         
-        #is it worth merging this dispatch forward
+        #is it worth considering merging over the next OOTM period
         isEconomical = (
             tempDispatchTracker[dispatchIndex ].incMargin
             + tempDispatchTracker[dispatchIndex + 1].incMargin
@@ -100,19 +105,19 @@ def bruteForceRunOptimization(dispatchTracker):
         if ((incInTheMoney == 1) & (isEconomical > 0)):
         
             bestMargin = tempDispatchTracker[dispatchIndex].incMargin
-            #bestStart = dispatchIndex
+            bestStart = dispatchIndex
             bestEnd = dispatchIndex
             
             tempMargin = tempDispatchTracker[dispatchIndex].incMargin
             #startFwdMerge = dispatchIndex
             
-            #print(('Current Margin: {0}, Start: {1}, End: {2}. Best Margin: {3}, Start: {4}, End: {5}.').format(
-            #'{:,.2f}'.format(tempMargin),
-            #dispatchIndex,
-            #dispatchIndex,
-            #'{:,.2f}'.format(bestMargin),
-            #bestStart,
-            #bestEnd))
+            print(('Current Margin: {0}, Start: {1}, End: {2}. Best Margin: {3}, Start: {4}, End: {5}.').format(
+            '{:,.2f}'.format(tempMargin),
+            dispatchIndex,
+            dispatchIndex,
+            '{:,.2f}'.format(bestMargin),
+            bestStart,
+            bestEnd))
             
             #attempt to merge into later dispatches to maximize incremental margin
             for depth in range (0,  mergeDepth):
@@ -130,9 +135,10 @@ def bruteForceRunOptimization(dispatchTracker):
                 # ))
                             
                 if  (ootmLoss + tempMargin < 0) or (nextStart > ootmLoss):
+                    
                     break
                 
-                #Increment temp margin by the next period
+                #Increment the temp margin by the next periods (OOTM+ITM)
                 tempMargin += (
                         tempDispatchTracker[nextOoTMIndex].incMargin
                         + tempDispatchTracker[nextITMIndex].incMargin
@@ -140,23 +146,29 @@ def bruteForceRunOptimization(dispatchTracker):
                 
                 #if losses accumulate to more than a new start, stop iterating
                 if tempMargin <= (bestMargin + nextStart):
+                    
                     break
                                 
                 if tempMargin >= bestMargin:
+                        
                         bestMargin = tempMargin
+                        
                         #bestStart = dispatchIndex
+                        
                         bestEnd = dispatchIndex + 2 * (depth + 1)
 
-                #print(('Current Margin: {0}, Start: {1}, End: {2}. Best Margin: {3}, Start: {4}, End: {5}.').format(
-                #'{:,.2f}'.format(tempMargin),
-                #dispatchIndex,
-                #dispatchIndex + 2 * (depth + 1),
-                #'{:,.2f}'.format(bestMargin),
-                #bestStart,
-                #bestEnd))
+                print(('Current Margin: {0}, Start: {1}, End: {2}. Best Margin: {3}, Start: {4}, End: {5}.').format(
+                '{:,.2f}'.format(tempMargin),
+                dispatchIndex,
+                dispatchIndex + 2 * (depth + 1),
+                '{:,.2f}'.format(bestMargin),
+                bestStart,
+                bestEnd))
                 
             #merge best margins forward
-            mergeDispatchTrackerRuns(tempDispatchTracker, dispatchIndex, bestEnd)
+            tempDispatchTracker = mergeDispatchTrackerRuns(tempDispatchTracker, dispatchIndex, bestEnd)
+            
+            listLength = len(tempDispatchTracker)
             
             #print(("Merged: {0}-{1} {2}").format(
             #    dispatchIndex,
@@ -175,17 +187,17 @@ def bruteForceRunOptimization(dispatchTracker):
             # )     
         
             #drop merged dispatches
-            for dropIndex in range (dispatchIndex, bestEnd):
-                toDrop.append(dropIndex)
+            # for dropIndex in range (dispatchIndex, bestEnd):
+            #     toDrop.append(dropIndex)
                             
             #iterate index
-            if dispatchIndex == bestEnd:
+            # if dispatchIndex == bestEnd:
             
-                dispatchIndex = bestEnd + 1
+            #     dispatchIndex = bestEnd + 1
             
-            else:
+            # else:
             
-                dispatchIndex = bestEnd + 1
+            #     dispatchIndex = bestEnd + 1
 
         else:
             
@@ -197,27 +209,24 @@ def bruteForceRunOptimization(dispatchTracker):
             #updatedDispatch.append(tempDispatchTracker[dispatchIndex])
             
             dispatchIndex += 1
-
-    for index in sorted(set(toDrop), reverse=True):
-
-        del tempDispatchTracker[index]    
         
     return tempDispatchTracker
 
 
 def mergeDispatchTrackerRuns(tempDispatchTracker, earlierindex, latterIndex):
-            #merge best margins forward
-            
-            targetPeriod = tempDispatchTracker[earlierindex]
+    #merge best margins forward
+    
+    targetPeriod = tempDispatchTracker[earlierindex]
 
-            targetPeriod.setEnd(tempDispatchTracker[latterIndex].endIndex)
+    targetPeriod.setEnd(tempDispatchTracker[latterIndex].endIndex)
 
-            for i in (latterIndex, earlierindex, -1):
+    for i in (latterIndex, earlierindex, -1):
 
-                targetPeriod.addMargin(tempDispatchTracker[i].incMargin)
+        targetPeriod.addMargin(tempDispatchTracker[i].incMargin)
 
-                del tempDispatchTracker[i]
+        del tempDispatchTracker[i]
 
+    return tempDispatchTracker
 
 
 def flagValidRuns(dispatchTracker, minMargin = 0, minRunTime = 0):
